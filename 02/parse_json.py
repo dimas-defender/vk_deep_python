@@ -18,7 +18,7 @@ def parse_json(json_str: str,
     for field in required_fields:
         for word in keywords:
             try:
-                if word in json_doc[field]:
+                if word in json_doc[field].split():
                     keyword_callback(field, word)
             except KeyError:
                 continue
