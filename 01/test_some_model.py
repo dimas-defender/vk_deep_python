@@ -6,8 +6,12 @@ class TestSomeModel(TestCase):
     def setUp(self):
         self.model = SomeModel()
 
-    def test_predict_invalid(self):
+    def test_predict_invalid_bad_threshold(self):
         result = predict_message_mood("test", self.model, -0.2, 0.4)
+        self.assertEqual(result, "Некорректные аргументы")
+
+    def test_predict_invalid_good_threshold(self):
+        result = predict_message_mood("test", self.model, 0.2, 1.2)
         self.assertEqual(result, "Некорректные аргументы")
 
     def test_predict_wrong_thresholds(self):
@@ -15,7 +19,7 @@ class TestSomeModel(TestCase):
         self.assertEqual(result, "Некорректные аргументы")
 
     def test_predict_great(self):
-        with mock.patch("someModel.SomeModel.predict") as mock_predict:
+        with mock.patch("some_model.SomeModel.predict") as mock_predict:
             mock_predict.return_value = 0.7
 
             result = predict_message_mood("abcdefg", self.model, 0.2, 0.6)
@@ -26,7 +30,7 @@ class TestSomeModel(TestCase):
             self.assertEqual(expected_calls, mock_predict.mock_calls)
 
     def test_predict_poor(self):
-        with mock.patch("someModel.SomeModel.predict") as mock_predict:
+        with mock.patch("some_model.SomeModel.predict") as mock_predict:
             mock_predict.return_value = 0.2
 
             result = predict_message_mood("Kk", self.model, 0.3, 0.8)
@@ -37,7 +41,7 @@ class TestSomeModel(TestCase):
             self.assertEqual(expected_calls, mock_predict.mock_calls)
 
     def test_predict_normal(self):
-        with mock.patch("someModel.SomeModel.predict") as mock_predict:
+        with mock.patch("some_model.SomeModel.predict") as mock_predict:
             mock_predict.return_value = 0.5
 
             result = predict_message_mood("qWeRt", self.model, 0.4, 0.8)
@@ -47,13 +51,35 @@ class TestSomeModel(TestCase):
             ]
             self.assertEqual(expected_calls, mock_predict.mock_calls)
 
-    def test_predict_normal_edge(self):
-        with mock.patch("someModel.SomeModel.predict") as mock_predict:
+    def test_predict_top_edge(self):
+        with mock.patch("some_model.SomeModel.predict") as mock_predict:
             mock_predict.return_value = 0.6
 
             result = predict_message_mood("qWeRtY", self.model, 0.3, 0.6)
             self.assertEqual(result, "норм")
             expected_calls = [
                 mock.call("qWeRtY")
+            ]
+            self.assertEqual(expected_calls, mock_predict.mock_calls)
+
+    def test_predict_bottom_edge(self):
+        with mock.patch("some_model.SomeModel.predict") as mock_predict:
+            mock_predict.return_value = 0.4
+
+            result = predict_message_mood("TwIN", self.model, 0.4, 0.7)
+            self.assertEqual(result, "норм")
+            expected_calls = [
+                mock.call("TwIN")
+            ]
+            self.assertEqual(expected_calls, mock_predict.mock_calls)
+
+    def test_predict_edge_thresholds(self):
+        with mock.patch("some_model.SomeModel.predict") as mock_predict:
+            mock_predict.return_value = 0.5
+
+            result = predict_message_mood("TwINs", self.model, 0, 1)
+            self.assertEqual(result, "норм")
+            expected_calls = [
+                mock.call("TwINs")
             ]
             self.assertEqual(expected_calls, mock_predict.mock_calls)
