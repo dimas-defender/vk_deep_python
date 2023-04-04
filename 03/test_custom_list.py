@@ -9,7 +9,7 @@ class TestCustomList(TestCase):
         expected = CustomList([6, 3, 10, 7])
 
         result = list1 + list2
-        self.assertEqual(result, expected)
+        self.assertEqual(list(result), list(expected))
 
     def test_add_built_in_and_custom(self):
         list1 = CustomList([1])
@@ -17,7 +17,7 @@ class TestCustomList(TestCase):
         expected = CustomList([3, 5])
 
         result = list1 + list2
-        self.assertEqual(result, expected)
+        self.assertEqual(list(result), list(expected))
 
     def test_radd(self):
         list1 = [2, 5]
@@ -25,7 +25,7 @@ class TestCustomList(TestCase):
         expected = CustomList([3, 5])
 
         result = list1 + list2
-        self.assertEqual(result, expected)
+        self.assertEqual(list(result), list(expected))
 
     def test_sub_both_custom(self):
         list1 = CustomList([5, 1, 3, 7])
@@ -33,7 +33,7 @@ class TestCustomList(TestCase):
         expected = CustomList([4, -1, -4, 7])
 
         result = list1 - list2
-        self.assertEqual(result, expected)
+        self.assertEqual(list(result), list(expected))
 
     def test_sub_built_in_and_custom(self):
         list1 = CustomList([1])
@@ -41,7 +41,7 @@ class TestCustomList(TestCase):
         expected = CustomList([-1, -5])
 
         result = list1 - list2
-        self.assertEqual(result, expected)
+        self.assertEqual(list(result), list(expected))
 
     def test_rsub(self):
         list1 = [2, 5]
@@ -49,7 +49,7 @@ class TestCustomList(TestCase):
         expected = CustomList([1, 5])
 
         result = list1 - list2
-        self.assertEqual(result, expected)
+        self.assertEqual(list(result), list(expected))
 
     def test_equal(self):
         list1 = CustomList([5, 12, -3, 8])
