@@ -29,6 +29,14 @@ class TestJsonParser(TestCase):
         self.assertEqual(result, "Передана некорректная json-строка!")
         self.assertEqual(mock_callback.call_count, 0)
 
+    def test_callback_none(self):
+        json_str = '{"key1": "driving a car", "key2": "apple orange"}'
+        fields = ['key1', 'extra', 'key2']
+        words = ['orange', 'car']
+
+        result = parse_json(json_str, None, fields, words)
+        self.assertEqual(result, "Не указана функция-обработчик!")
+
     def test_fields_none(self):
         mock_callback = mock.Mock()
         json_str = '{"key1": "driving a car", "key2": "apple orange"}'
