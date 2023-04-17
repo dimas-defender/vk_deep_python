@@ -20,49 +20,35 @@ class TestCustomMeta(TestCase):
         self.inst = CustomClass()
 
     def test_cls_attr_old(self):
-        try:
+        with self.assertRaises(AttributeError):
             CustomClass.x
-            self.fail()
-        except AttributeError:
-            pass
 
     def test_cls_attr_new(self):
         self.assertEqual(CustomClass.custom_x, 50)
 
     def test_cls_dynamic(self):
         CustomClass.dynamic = "after init"
-        try:
+        with self.assertRaises(AttributeError):
             CustomClass.dynamic
-            self.fail()
-        except AttributeError:
-            self.assertEqual(CustomClass.custom_dynamic, "after init")
+        self.assertEqual(CustomClass.custom_dynamic, "after init")
 
     def test_cls_attr_old_from_inst(self):
-        try:
+        with self.assertRaises(AttributeError):
             self.inst.x
-            self.fail()
-        except AttributeError:
-            pass
 
     def test_cls_attr_new_from_inst(self):
         self.assertEqual(self.inst.custom_x, 50)
 
     def test_inst_attr_old(self):
-        try:
+        with self.assertRaises(AttributeError):
             self.inst.val
-            self.fail()
-        except AttributeError:
-            pass
 
     def test_inst_attr_new(self):
         self.assertEqual(self.inst.custom_val, 99)
 
     def test_inst_method_old(self):
-        try:
+        with self.assertRaises(AttributeError):
             self.inst.line()
-            self.fail()
-        except AttributeError:
-            pass
 
     def test_inst_method_new(self):
         self.assertEqual(self.inst.custom_line(), 100)
@@ -71,16 +57,11 @@ class TestCustomMeta(TestCase):
         self.assertEqual(str(self.inst), "Custom_by_metaclass")
 
     def test_inst_nonexistent_attr(self):
-        try:
-            self.inst.aaa()
-            self.fail()
-        except AttributeError:
-            pass
+        with self.assertRaises(AttributeError):
+            self.inst.aaa
 
     def test_inst_dynamic(self):
         self.inst.dynamic = "added later"
-        try:
+        with self.assertRaises(AttributeError):
             self.inst.dynamic
-            self.fail()
-        except AttributeError:
-            self.assertEqual(self.inst.custom_dynamic, "added later")
+        self.assertEqual(self.inst.custom_dynamic, "added later")

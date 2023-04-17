@@ -58,7 +58,7 @@ class Year:
 
 class LimitedFloat:
     def __set_name__(self, owner, name):
-        self._instance_attr_name = f"_posfloat_{name}"
+        self._instance_attr_name = f"_limfloat_{name}"
 
     def __get__(self, obj, objtype):
         if obj is None:
