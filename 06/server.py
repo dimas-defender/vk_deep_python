@@ -3,10 +3,10 @@ import threading
 import queue
 import sys
 from collections import Counter
-import requests
-from bs4 import BeautifulSoup
 import json
 import re
+import requests
+from bs4 import BeautifulSoup
 
 
 class Server:
@@ -36,30 +36,30 @@ class Server:
 
         while True:
             client_sock, _ = self.server_sock.accept()
+            self.url_queue.put(client_sock)
 
             if not client_sock:
-                self.url_queue.put(('EOF', None))
                 break
-
-            data = client_sock.recv(4096)
-            if not data:
-                self.url_queue.put(('EOF', None))
-                break
-
-            self.url_queue.put((data.decode(), client_sock))
 
         for th in threads:
             th.join()
 
     def handle_request(self, tid):
         while True:
-            data, client_sock = self.url_queue.get()
-            if data == 'EOF':
-                self.url_queue.put(('EOF', None))
+            client_sock = self.url_queue.get()
+
+            if client_sock is None:
+                self.url_queue.put(None)
+                break
+
+            data = client_sock.recv(4096)
+            if not data:
+                self.url_queue.put(None)
                 break
 
             try:
-                text = BeautifulSoup(requests.get(data).text, features='html.parser').text
+                text_data = requests.get(data.decode()).text
+                text = BeautifulSoup(text_data, features='html.parser').text
                 cleared_text = re.findall(r'[а-яёА-ЯЁa-zA-Z]+', text)
                 counter = Counter(cleared_text)
                 top_words = dict(counter.most_common(self.N_words))
@@ -68,13 +68,12 @@ class Server:
                 client_sock.sendall(response.encode())
                 client_sock.close()
 
-                self.lock.acquire()
-                self.urls_handled += 1
-                print(f'Thread {tid}: {self.urls_handled} urls handled')
-                self.lock.release()
+                with self.lock:
+                    self.urls_handled += 1
+                    print(f'Thread {tid}: {self.urls_handled} urls handled')
 
             except Exception as e:
-                print(f'Error{e} in thread{tid}')
+                print(f'ERROR in thread{tid}: {e}')
 
 
 if __name__ == '__main__':

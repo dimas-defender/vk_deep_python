@@ -36,6 +36,7 @@ class Client:
             if url == 'EOF':
                 self.url_queue.put('EOF')
                 break
+
             try:
                 client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client_sock.connect(("localhost", 15000))
@@ -43,8 +44,9 @@ class Client:
                 data = client_sock.recv(4096)
                 print(url + ": " + data.decode())
                 client_sock.close()
+
             except Exception as e:
-                print(f'Error{e} in thread{tid}')
+                print(f'ERROR in thread{tid}: {e}')
 
 
 if __name__ == '__main__':
