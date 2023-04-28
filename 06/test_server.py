@@ -8,7 +8,7 @@ class TestServer(TestCase):
         client_mock = mock.Mock()
         client_mock.recv.side_effect = [
             'https://vk.com'.encode(),
-            'https://google.com'.encode(),
+            'https://google.ru'.encode(),
             'https://yandex.com'.encode()
         ]
 
@@ -20,11 +20,19 @@ class TestServer(TestCase):
             (None, None)
         ]
 
-        server = Server()
+        url_handler_mock = mock.Mock()
+        url_handler_mock.side_effect = [
+            "{\"ВКонтакте\": 3, \"браузер\": 2}",
+            "{\"GoogleПоиск\": 1, \"Картинки\": 1}",
+            "{\"com\": 2, \"YandexenBahasa\": 1}"
+        ]
+
+        server = Server(3, 2, url_handler_mock)
         server.start()
 
         self.assertEqual(4, server_mock.accept.call_count)
         self.assertEqual(3, client_mock.recv.call_count)
+        self.assertEqual(3, url_handler_mock.call_count)
         self.assertEqual(3, server.urls_handled)
 
     @mock.patch("socket.socket")
@@ -33,8 +41,8 @@ class TestServer(TestCase):
         thread_mock.return_value = thread_mock
         server_mock.return_value = server_mock
         server_mock.accept.side_effect = [(None, None)]
-        N_workers = 8
+        workers = 8
 
-        server = Server(N_workers)
+        server = Server(workers)
         server.start()
-        self.assertEqual(N_workers, thread_mock.call_count)
+        self.assertEqual(workers, thread_mock.call_count)

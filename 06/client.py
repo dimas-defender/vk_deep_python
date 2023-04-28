@@ -1,25 +1,25 @@
 import socket
 import threading
-import queue
-import sys
+from queue import Queue
+from sys import argv
 
 
 class Client:
-    def __init__(self, urls, N_threads=10):
+    def __init__(self, urls, n_threads=10):
         self.urls = urls
-        self.N_threads = N_threads
-        self.url_queue = queue.Queue()
+        self.n_threads = n_threads
+        self.url_queue = Queue()
 
         self.threads = [
             threading.Thread(
                 target=self.send_request,
                 args=[i]
             )
-            for i in range(self.N_threads)
+            for i in range(self.n_threads)
         ]
 
-        for th in self.threads:
-            th.start()
+        for thread in self.threads:
+            thread.start()
 
     def fill_queue(self):
         for url in self.urls:
@@ -27,8 +27,8 @@ class Client:
 
         self.url_queue.put('EOF')
 
-        for th in self.threads:
-            th.join()
+        for thread in self.threads:
+            thread.join()
 
     def send_request(self, tid):
         while True:
@@ -50,6 +50,6 @@ class Client:
 
 
 if __name__ == '__main__':
-    with open(sys.argv[2], "r") as urls_file:
-        client = Client(urls_file, int(sys.argv[1]))
+    with open(argv[2], "r") as urls_file:
+        client = Client(urls_file, int(argv[1]))
         client.fill_queue()

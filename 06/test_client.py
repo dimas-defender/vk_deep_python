@@ -10,7 +10,7 @@ class TestClient(TestCase):
             'https://mail.ru\n'
         ]
 
-        client = Client(urls)
+        client = Client(urls, 2)
 
         socket_mock.return_value = socket_mock
         socket_mock.recv.side_effect = [
@@ -26,15 +26,16 @@ class TestClient(TestCase):
         self.assertEqual(client.url_queue.get(), 'EOF')
 
     @mock.patch('threading.Thread')
-    def test_thread(self, thread_mock):
+    def test_create_threads(self, thread_mock):
         thread_mock.return_value = thread_mock
 
-        N_threads = 3
-        client = Client(['EOF'], N_threads)
+        threads = 6
+        client = Client([], threads)
 
-        self.assertEqual(N_threads, thread_mock.call_count)
-        self.assertEqual(N_threads, thread_mock.start.call_count)
-
+        self.assertEqual(threads, thread_mock.call_count)
+        self.assertEqual(threads, thread_mock.start.call_count)
         self.assertEqual(0, thread_mock.join.call_count)
         client.fill_queue()
-        self.assertEqual(N_threads, thread_mock.join.call_count)
+        self.assertEqual(threads, thread_mock.join.call_count)
+        self.assertEqual(client.url_queue.qsize(), 1)
+        self.assertEqual(client.url_queue.get(), 'EOF')

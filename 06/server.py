@@ -1,19 +1,29 @@
 import socket
 import threading
-import queue
-import sys
+from queue import Queue
+from sys import argv
 from collections import Counter
-import json
-import re
-import requests
+from json import dumps
+from re import findall
+from requests import get
 from bs4 import BeautifulSoup
 
 
+def handle_url(url, n_words):
+    html = get(url).text
+    text = BeautifulSoup(html, features='html.parser').text
+    cleared_text = findall(r'[а-яёА-ЯЁa-zA-Z]+', text)
+    counter = Counter(cleared_text)
+    top_words = dict(counter.most_common(n_words))
+    return dumps(top_words, ensure_ascii=False)
+
+
 class Server:
-    def __init__(self, N_workers=10, N_words=7):
-        self.N_workers = N_workers
-        self.N_words = N_words
-        self.url_queue = queue.Queue()
+    def __init__(self, n_workers=10, n_words=7, url_handler=handle_url):
+        self.n_workers = n_workers
+        self.n_words = n_words
+        self.url_handler = url_handler
+        self.url_queue = Queue()
         self.lock = threading.Lock()
         self.urls_handled = 0
 
@@ -28,11 +38,11 @@ class Server:
                 target=self.handle_request,
                 args=[i]
             )
-            for i in range(self.N_workers)
+            for i in range(self.n_workers)
         ]
 
-        for th in threads:
-            th.start()
+        for thread in threads:
+            thread.start()
 
         while True:
             client_sock, _ = self.server_sock.accept()
@@ -41,8 +51,8 @@ class Server:
             if not client_sock:
                 break
 
-        for th in threads:
-            th.join()
+        for thread in threads:
+            thread.join()
 
     def handle_request(self, tid):
         while True:
@@ -58,13 +68,7 @@ class Server:
                 break
 
             try:
-                text_data = requests.get(data.decode()).text
-                text = BeautifulSoup(text_data, features='html.parser').text
-                cleared_text = re.findall(r'[а-яёА-ЯЁa-zA-Z]+', text)
-                counter = Counter(cleared_text)
-                top_words = dict(counter.most_common(self.N_words))
-                response = json.dumps(top_words, ensure_ascii=False)
-
+                response = self.url_handler(data.decode(), self.n_words)
                 client_sock.sendall(response.encode())
                 client_sock.close()
 
@@ -77,5 +81,5 @@ class Server:
 
 
 if __name__ == '__main__':
-    server = Server(int(sys.argv[1]), int(sys.argv[2]))
+    server = Server(int(argv[1]), int(argv[2]))
     server.start()
