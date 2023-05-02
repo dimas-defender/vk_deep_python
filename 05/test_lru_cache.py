@@ -3,32 +3,44 @@ from lru_cache import LRUCache
 
 
 class TestLRUCache(TestCase):
-    def setUp(self):
-        self.cache = LRUCache(2)
-        self.cache.set("login", "maestro")
+    def test_success(self):
+        cache = LRUCache(2)
+        cache.set("k1", "val1")
+        cache.set("k2", "val2")
 
-    def test_get_none(self):
-        self.assertIsNone(self.cache.get("not_in_cache"))
+        self.assertIsNone(cache.get("k3"))
+        self.assertEqual(cache.get("k2"), "val2")
+        self.assertEqual(cache.get("k1"), "val1")
 
-    def test_get_ok(self):
-        self.assertEqual(self.cache.get("login"), "maestro")
+        cache.set("k3", "val3")
 
-    def test_set_new_key(self):
-        self.cache.set("password", "hidden")
-        self.assertEqual(self.cache.get("password"), "hidden")
-        self.assertEqual(self.cache.get("login"), "maestro")
+        self.assertEqual(cache.get("k3"), "val3")
+        self.assertIsNone(cache.get("k2"))
+        self.assertEqual(cache.get("k1"), "val1")
 
-    def test_set_old_key(self):
-        self.cache.set("login", "skipper")
-        self.assertEqual(self.cache.get("login"), "skipper")
+    def test_len_1(self):
+        cache = LRUCache(1)
+        cache.set("k1", "val1")
 
-    def test_set_over_limit(self):
-        self.cache.set("password", "hidden")
-        self.assertEqual(self.cache.get("password"), "hidden")
-        self.assertEqual(self.cache.get("login"), "maestro")
-        self.assertIsNone(self.cache.get("email"))
+        self.assertEqual(cache.get("k1"), "val1")
+        self.assertIsNone(cache.get("k2"))
+        self.assertIsNone(cache.get("k3"))
 
-        self.cache.set("email", "unknown")
-        self.assertIsNone(self.cache.get("password"))
-        self.assertEqual(self.cache.get("login"), "maestro")
-        self.assertEqual(self.cache.get("email"), "unknown")
+        cache.set("k2", "val2")
+        cache.set("k3", "val3")
+
+        self.assertIsNone(cache.get("k1"))
+        self.assertIsNone(cache.get("k2"))
+        self.assertEqual(cache.get("k3"), "val3")
+
+    def test_reset_key(self):
+        cache = LRUCache(2)
+        cache.set("login", "maestro")
+        cache.set("password", "hidden")
+
+        cache.set("login", "skipper")
+        cache.set("email", "unknown")
+
+        self.assertEqual(cache.get("login"), "skipper")
+        self.assertEqual(cache.get("email"), "unknown")
+        self.assertIsNone(cache.get("password"))
