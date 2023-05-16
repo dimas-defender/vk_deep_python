@@ -1,14 +1,16 @@
 import socket
 import threading
+import argparse
 from queue import Queue
-from sys import argv
+from sys import stdout
 
 
 class Client:
-    def __init__(self, urls, n_threads=10):
+    def __init__(self, urls, n_threads=10, print_dest=stdout):
         self.urls = urls
         self.n_threads = n_threads
-        self.url_queue = Queue()
+        self.print_dest = print_dest
+        self.url_queue = Queue(100)
 
         self.threads = [
             threading.Thread(
@@ -42,7 +44,7 @@ class Client:
                 client_sock.connect(("localhost", 15000))
                 client_sock.sendall(url.encode())
                 data = client_sock.recv(4096)
-                print(url + ": " + data.decode())
+                print(url + ": " + data.decode(), file=self.print_dest)
                 client_sock.close()
 
             except Exception as e:
@@ -50,6 +52,11 @@ class Client:
 
 
 if __name__ == '__main__':
-    with open(argv[2], "r") as urls_file:
-        client = Client(urls_file, int(argv[1]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("threads", type=int)
+    parser.add_argument("file")
+    args = parser.parse_args()
+
+    with open(args.file, "r") as urls_file:
+        client = Client(urls_file, args.threads)
         client.fill_queue()

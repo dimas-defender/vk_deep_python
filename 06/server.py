@@ -1,7 +1,7 @@
 import socket
 import threading
+import argparse
 from queue import Queue
-from sys import argv
 from collections import Counter
 from json import dumps
 from re import findall
@@ -23,7 +23,7 @@ class Server:
         self.n_workers = n_workers
         self.n_words = n_words
         self.url_handler = url_handler
-        self.url_queue = Queue()
+        self.url_queue = Queue(100)
         self.lock = threading.Lock()
         self.urls_handled = 0
 
@@ -56,18 +56,18 @@ class Server:
 
     def handle_request(self, tid):
         while True:
-            client_sock = self.url_queue.get()
-
-            if client_sock is None:
-                self.url_queue.put(None)
-                break
-
-            data = client_sock.recv(4096)
-            if not data:
-                self.url_queue.put(None)
-                break
-
             try:
+                client_sock = self.url_queue.get()
+
+                if client_sock is None:
+                    self.url_queue.put(None)
+                    break
+
+                data = client_sock.recv(4096)
+                if not data:
+                    self.url_queue.put(None)
+                    break
+
                 response = self.url_handler(data.decode(), self.n_words)
                 client_sock.sendall(response.encode())
                 client_sock.close()
@@ -81,5 +81,10 @@ class Server:
 
 
 if __name__ == '__main__':
-    server = Server(int(argv[1]), int(argv[2]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-w", type=int)
+    parser.add_argument("-k", type=int)
+    args = parser.parse_args()
+
+    server = Server(args.w, args.k)
     server.start()
