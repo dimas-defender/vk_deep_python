@@ -1,4 +1,4 @@
-from sys import argv
+import argparse
 import asyncio
 import aiohttp
 
@@ -24,7 +24,7 @@ async def start_worker(queue, session):
 
 
 async def fetch_batch(urls, n_workers, session):
-    queue = asyncio.Queue()
+    queue = asyncio.Queue(100)
 
     workers = [
         asyncio.create_task(start_worker(queue, session))
@@ -46,5 +46,10 @@ async def main(urls, workers):
 
 
 if __name__ == '__main__':
-    with open(argv[2], 'r') as urls:
-        asyncio.run(main(urls, int(argv[1])))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workers", type=int)
+    parser.add_argument("file")
+    args = parser.parse_args()
+
+    with open(args.file, 'r') as urls:
+        asyncio.run(main(urls, args.workers))
