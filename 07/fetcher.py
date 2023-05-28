@@ -6,7 +6,7 @@ import aiohttp
 async def fetch_url(url, session):
     async with session.get(url) as resp:
         assert resp.status == 200
-        data = await resp.read()
+        data = await resp.read()  # print(data, file=)
         assert data is not None
         print(f'{url[:-1]} handled')
 
@@ -24,7 +24,7 @@ async def start_worker(queue, session):
 
 
 async def fetch_batch(urls, n_workers, session):
-    queue = asyncio.Queue(100)
+    queue = asyncio.Queue(2 * n_workers)
 
     workers = [
         asyncio.create_task(start_worker(queue, session))
